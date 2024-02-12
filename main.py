@@ -1,8 +1,10 @@
 import streamlit as st
-from langchain import PromptTemplate
+from langchain import PromptTemplate,ConversationChain
 from langchain.llms import OpenAI
 from langchain.agents import load_tools
+import json
 import os
+from datetime import datetime, timedelta
 
 # Set OpenAI and SerpApi API keys
 os.environ["OPENAI_API_KEY"] = "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"
@@ -26,27 +28,38 @@ template = """
     RELEASE YEAR: {release_year}
     RATING: {rating}
     LANGUAGE: {language}
-    YOUR RESPONSE
+    YOUR RESPONSE SHOULD FOLLOW THE FOLLOWING FORMAT:
+    ### Here's The suitable movie I found for you\n\n
+    Title: [Insert title here]\n
+    Director: [Insert director name here]\n
+    Starring Actors: [List the most important actors separated by commas., at most 4 actors]\n
+    Language: [Insert language here]\n
+    Rating:  [Insert IMDB or Rotten tomatoes rating here]\n
+    Release Year: [Insert Release Year Here]\n
+    Movie Poster: [Insert movie URL based on the title, if not found it will be a placeholder.]\n
+    YOUR RESPONSE:
 """
 
 # Initialize PromptTemplate
 prompt = PromptTemplate(
-    input_variables=["genre", "release_year", "rating"],  
+    input_variables=["genre", "release_year", "rating", "language"],  
     template=template,
 )
 
 # Function to load Language Model
 def load_LLM():
-    """Logic for loading the chain you want to use should go here"""
     llm = OpenAI(temperature=1)
     return llm
 
 # Load Language Model
 llm = load_LLM()
-
+conversation = ConversationChain(llm=llm, verbose=True)
 # Streamlit page configuration
-st.set_page_config(page_title="EntertainerGPT", page_icon="🎬🍿", layout="centered")
+st.set_page_config(page_title="EntertainerGPT", page_icon="🎬🍿", layout="wide")
 st.header("Hi, I'm your EntertainerGPT!")
+
+# Sidebar title
+st.sidebar.title("Recommended movies 🎬")
 
 # Display image and description
 col1, col2 = st.columns([2, 1])  
@@ -83,13 +96,50 @@ language = st.selectbox(
     ('English', 'Arabic', 'French')
 )
 
+# Apply button
+apply_button = st.button("Apply")
 
 # Display suggestions
 st.markdown("## Suggestions 🔮:")
 
-if genre:
-    # Format the prompt with user inputs
-    prompt_with_movie = prompt.format(genre=genre, rating=option_rating, release_year=release_year_range, language=language)
-    # Use the Language Model to generate suggestions
-    suggested_movie = llm(prompt_with_movie)
-    st.write(suggested_movie)
+if apply_button:
+    if genre:
+        st.spinner("Searching...")
+        
+        prompt_with_movie = prompt.format(genre=genre, rating=option_rating, release_year=release_year_range, language=language)
+        
+        suggested_movie = llm(prompt_with_movie)
+        
+        # Parse the suggested movie information
+        movie_info = suggested_movie.split('\n')
+
+        # Output the parsed movie information dynamically
+        for info in movie_info:
+            st.write(info)
+
+
+
+# Get suggested movies for different time intervals
+suggested_movies = st.session_state.get('suggested_movies', [])
+
+# Get current date
+current_date = datetime.now()
+# Display previously suggested movie based on time intervals
+st.sidebar.markdown("## Previously Suggested Movies")
+
+# Get suggested movies for different time intervals
+suggested_movies = st.session_state.get('suggested_movies', [])
+
+# Get current date
+current_date = datetime.now()
+
+# Display previously suggested movies for different time intervals
+for days, interval_name in [(0, "Today"), (3, "Previous 3 Days"), (30, "Previous 30 Days")]:
+    st.sidebar.markdown(f"### {interval_name}")
+    interval_date = current_date - timedelta(days=days)
+    movies_in_interval = [movie for movie in suggested_movies if movie]
+    if movies_in_interval:
+        for movie in movies_in_interval:
+            st.sidebar.write(movie)
+    else:
+        st.sidebar.write("No suggestions")
