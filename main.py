@@ -112,7 +112,7 @@ with col2:
         <div style='padding: 20px; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);'>
             <h3 style='color: #333;'>Feeling indecisive about what to watch?</h3>
             <p style='color: #555;'>Type your thoughts here, and let me help you discover something exciting!</p>
-            <p style='color: #555;'>This tool is powered by <a href="https://www.langchain.com" style='color: #0072c6; text-decoration: none;'>LangChain</a> and <a href="https://openai.com/" style='color: #0072c6; text-decoration: none;'>OpenAI</a> and **made by** <a href="https://github.com/Dalia222" style='color: #0072c6; text-decoration: none;'>@DaliaRaafat</a>.</p>
+            <p style='color: #555;'>This tool is powered by <a href="https://www.langchain.com" style='color: #0072c6; text-decoration: none;'>LangChain</a> and <a href="https://openai.com/" style='color: #0072c6; text-decoration: none;'>OpenAI</a> and <b>made by</b> <a href="https://github.com/Dalia222" style='color: #0072c6; text-decoration: none;'>@DaliaRaafat</a>.</p>
         </div>
         """,
         unsafe_allow_html=True
