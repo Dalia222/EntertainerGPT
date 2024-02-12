@@ -21,7 +21,7 @@ with open('./waves.css') as f:
 st.markdown(f'<style>{css}</style>', unsafe_allow_html=True)
 
 # Load required tools
-tools = load_tools(["serpapi"])
+# tools = load_tools(["serpapi"])
 
 # Templates for the prompt
 template = """
