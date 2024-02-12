@@ -3,13 +3,18 @@ from langchain import PromptTemplate, ConversationChain
 from langchain.llms import OpenAI
 from langchain.agents import load_tools
 from langchain.memory import ConversationBufferMemory
+from dotenv import load_dotenv, dotenv_values
 import json
 import os
 from datetime import datetime, timedelta
 
+# Load environment variables from .env file
+load_dotenv()
+config = dotenv_values(".env")
+
 # Set OpenAI and SerpApi API keys
-os.environ["OPENAI_API_KEY"] = "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"
-os.environ["SERPAPI_API_KEY"] = "0b0548d186b96c230d5b1abc1d47380869a88de91e7ad899de2b01ed537401b4"
+os.environ["OPENAI_API_KEY"] = config["OPENAI_API_KEY"]
+os.environ["SERPAPI_API_KEY"] = config["SERPAPI_API_KEY"]
 
 # Load required tools
 tools = load_tools(["serpapi"])

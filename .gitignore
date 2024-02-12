@@ -1,0 +1,28 @@
+# This is a .gitignore file
+
+# Directories
+/build/
+/dist
+/node_modules/
+# Files
+*.log
+*.tmp
+*.swp
+.env
+
+# Operating system files
+DS_Store
+Thumbs.db
+
+# IDE files
+.idea/
+*.sublime-workspace
+
+# Python files
+*.pyc
+*.pyo
+
+# Node.js files
+npm-debug.log
+yarn-debug.log
+yarn-error.log
