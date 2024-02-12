@@ -13,8 +13,8 @@ load_dotenv()
 config = dotenv_values(".env")
 
 # Set OpenAI and SerpApi API keys
-os.environ["OPENAI_API_KEY"] = config["OPENAI_API_KEY"]
-os.environ["SERPAPI_API_KEY"] = config["SERPAPI_API_KEY"]
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+os.environ["SERPAPI_API_KEY"] = os.getenv("SERPAPI_API_KEY")
 
 with open('./waves.css') as f:
     css = f.read()
