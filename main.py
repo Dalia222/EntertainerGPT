@@ -1,7 +1,8 @@
 import streamlit as st
-from langchain import PromptTemplate,ConversationChain
+from langchain import PromptTemplate, ConversationChain
 from langchain.llms import OpenAI
 from langchain.agents import load_tools
+from langchain.memory import ConversationBufferMemory
 import json
 import os
 from datetime import datetime, timedelta
@@ -37,6 +38,7 @@ template = """
     Rating:  [Insert IMDB or Rotten tomatoes rating here]\n
     Release Year: [Insert Release Year Here]\n
     Movie Poster: [Insert movie URL based on the title, if not found it will be a placeholder.]\n
+    DESCRIPTION:  [Insert short description about the movie]
     YOUR RESPONSE:
 """
 
@@ -102,44 +104,40 @@ apply_button = st.button("Apply")
 # Display suggestions
 st.markdown("## Suggestions 🔮:")
 
+# Initialize suggested_movies list
+suggested_movies = st.session_state.get('suggested_movies', [])
+
 if apply_button:
     if genre:
         st.spinner("Searching...")
-        
-        prompt_with_movie = prompt.format(genre=genre, rating=option_rating, release_year=release_year_range, language=language)
-        
+
+        prompt_with_movie = prompt.format(genre=genre, rating=option_rating, release_year=release_year_range,
+                                          language=language)
+
         suggested_movie = llm(prompt_with_movie)
-        
+
         # Parse the suggested movie information
         movie_info = suggested_movie.split('\n')
 
         # Output the parsed movie information dynamically
-        for info in movie_info:
+        for info in movie_info[:-1]:  # Exclude the last line which is the description
             st.write(info)
 
+        # Add the suggested movie to the history
+        suggested_movies.append(suggested_movie)
+        st.session_state['suggested_movies'] = suggested_movies
 
+        # Display description in expander
+        with st.expander("Description"):
+            st.info(movie_info[-1])  # Display the last line which is the description
 
-# Get suggested movies for different time intervals
-suggested_movies = st.session_state.get('suggested_movies', [])
-
-# Get current date
-current_date = datetime.now()
-# Display previously suggested movie based on time intervals
+# Display previously suggested movies in the sidebar
 st.sidebar.markdown("## Previously Suggested Movies")
 
-# Get suggested movies for different time intervals
-suggested_movies = st.session_state.get('suggested_movies', [])
-
-# Get current date
-current_date = datetime.now()
-
-# Display previously suggested movies for different time intervals
-for days, interval_name in [(0, "Today"), (3, "Previous 3 Days"), (30, "Previous 30 Days")]:
-    st.sidebar.markdown(f"### {interval_name}")
-    interval_date = current_date - timedelta(days=days)
-    movies_in_interval = [movie for movie in suggested_movies if movie]
-    if movies_in_interval:
-        for movie in movies_in_interval:
-            st.sidebar.write(movie)
-    else:
-        st.sidebar.write("No suggestions")
+# Display memory of each previously suggested movie in a separate section
+for movie_index, suggested_movie in enumerate(suggested_movies, start=1):
+    movie_info = suggested_movie.split('\n')
+    st.sidebar.markdown(f"### Movie {movie_index}")
+    with st.sidebar.expander(f"Memory {movie_index}"):
+        for memory_line in movie_info:
+            st.info(memory_line)
