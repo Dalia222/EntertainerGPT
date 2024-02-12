@@ -14,15 +14,16 @@ os.environ["SERPAPI_API_KEY"] = "0b0548d186b96c230d5b1abc1d47380869a88de91e7ad89
 # Load required tools
 tools = load_tools(["serpapi"])
 
-# Template for the prompt
+# Templates for the prompt
 template = """
-    Below is an input of the movie required based on its genre and its release year and rating and language
+    Below is an input of the movie required based on its genre and its release year and rating and language 
 
     Your goal is to:
     - Find the movie based on the specified genre
     - Find the movie based on the specified release year, Note that: we are currently in 2024
     - Find the movie based on the specified rating  
     - Find the movie based on the specified language  
+    - find a random movie if the user chooses a random movie
 
     Below is the Movie, Release Year, Rating:
     GENRE: {genre}
@@ -30,14 +31,34 @@ template = """
     RATING: {rating}
     LANGUAGE: {language}
     YOUR RESPONSE SHOULD FOLLOW THE FOLLOWING FORMAT:
-    ### Here's The suitable movie I found for you\n\n
-    Title: [Insert title here]\n
-    Director: [Insert director name here]\n
-    Starring Actors: [List the most important actors separated by commas., at most 4 actors]\n
-    Language: [Insert language here]\n
-    Rating:  [Insert IMDB or Rotten tomatoes rating here]\n
-    Release Year: [Insert Release Year Here]\n
-    Movie Poster: [Insert movie URL based on the title, if not found it will be a placeholder.]\n
+    ### Here's The suitable movie I found for you
+    Title: [Insert title here]
+    Director: [Insert director name here]
+    Starring Actors: [List the most important actors separated by commas., at most 4 actors]
+    Language: [Insert language here]
+    Rating:  [Insert IMDB or Rotten tomatoes rating here]
+    Release Year: [Insert Release Year Here]
+    Movie Poster: [Insert movie URL based on the title, if not found it will be a placeholder.]
+    DESCRIPTION:  [Insert short description about the movie]
+    YOUR RESPONSE:
+"""
+
+template2 = """
+You are a helpful Agent that generates random movies for the user 
+Your goal is to:
+- find a good random movie with a random genre
+- find a good random movie with a random time
+- find a good random movie with a random language
+- find a good random movie with a random rate
+YOUR RESPONSE SHOULD FOLLOW THE FOLLOWING FORMAT:
+    ### Here's a Random movie I found for you
+    Title: [Insert title here]
+    Director: [Insert director name here]
+    Starring Actors: [List the most important actors separated by commas., at most 4 actors]
+    Language: [Insert language here]
+    Rating:  [Insert IMDB or Rotten tomatoes rating here]
+    Release Year: [Insert Release Year Here]
+    Movie Poster: [Insert movie URL based on the title, if not found it will be a placeholder.]
     DESCRIPTION:  [Insert short description about the movie]
     YOUR RESPONSE:
 """
@@ -46,6 +67,10 @@ template = """
 prompt = PromptTemplate(
     input_variables=["genre", "release_year", "rating", "language"],  
     template=template,
+)
+prompt2 = PromptTemplate(
+    input_variables=[],  
+    template=template2,
 )
 
 # Function to load Language Model
@@ -74,70 +99,87 @@ with col2:
 
 # Genre input
 st.markdown("## What kind of movie are you in the mood for?")
-# Function to get user input genre
-def get_text():
-    genre = st.text_area("", placeholder="Movie Genre...", key="movie_input", max_chars=20)
-    return genre
+col1, col2,col3,col4 = st.columns(4) 
+with col1:
+    genre = st.selectbox(
+        'Select Genre',
+        ('Comedy', 'Horror','Romance', 'Sci-fi', 'Thriller', 'Drama', 'Action')
+    )
 
-# Get user input genre
-genre = get_text()
+with col2:
+    min_year, max_year = 1920, 2024 
+    release_year_range = st.slider("Release Year Range", min_value=min_year, max_value=max_year, value=(min_year, max_year))
 
-# Release year slider
-st.markdown("## Select Release Year")
-min_year, max_year = 1920, 2024  # Example range
-release_year_range = st.slider("Release Year Range", min_value=min_year, max_value=max_year, value=(min_year, max_year))
-
+with col3:
 # Rating and language inputs
-option_rating = st.selectbox(
-    'Select Rating Options',
-    ('Top Rated ⭐⭐⭐⭐⭐', 'Highly Rated ⭐⭐⭐⭐','Average Rating ⭐⭐⭐')
-)
+    option_rating = st.selectbox(
+        'Select Rating Options',
+        ('Top Rated ⭐⭐⭐⭐⭐', 'Highly Rated ⭐⭐⭐⭐','Average Rating ⭐⭐⭐')
+    )
 
-language = st.selectbox(
-    'Select Language',
-    ('English', 'Arabic', 'French')
-)
+with col4:
+    language = st.selectbox(
+        'Select Language',
+        ('English', 'Arabic', 'French')
+    )
+
+
 
 # Apply button
-apply_button = st.button("Apply")
+apply_button = st.button("✨ Generate! ✨")
+random_button = st.button("Random Movie")
+
+# Define prompts
+prompt_standard = prompt.format(genre=genre, rating=option_rating, release_year=release_year_range, language=language)
+prompt_random = prompt2.format()
+
+# Initialize suggested_movies list
+suggested_movies = st.session_state.get('suggested_movies', [])
+suggested_movie = ""
 
 # Display suggestions
 st.markdown("## Suggestions 🔮:")
 
-# Initialize suggested_movies list
-suggested_movies = st.session_state.get('suggested_movies', [])
-
 if apply_button:
-    if genre:
-        st.spinner("Searching...")
+    st.spinner("Searching...")
+    suggested_movie = llm(prompt_standard)
+elif random_button:
+    st.spinner("Searching for a random movie...")
+    suggested_movie = llm(prompt_random)
 
-        prompt_with_movie = prompt.format(genre=genre, rating=option_rating, release_year=release_year_range,
-                                          language=language)
+# Parse the suggested movie information if a suggestion was made
+if suggested_movie:
+    movie_info = suggested_movie.split('\n')
 
-        suggested_movie = llm(prompt_with_movie)
+    # Output the parsed movie information dynamically
+    for info in movie_info[:-1]:  # Exclude the last line which is the description
+        st.write(info)
 
-        # Parse the suggested movie information
-        movie_info = suggested_movie.split('\n')
+    # Add the suggested movie to the history
+    suggested_movies.append(suggested_movie)
+    st.session_state['suggested_movies'] = suggested_movies
 
-        # Output the parsed movie information dynamically
-        for info in movie_info[:-1]:  # Exclude the last line which is the description
-            st.write(info)
-
-        # Add the suggested movie to the history
-        suggested_movies.append(suggested_movie)
-        st.session_state['suggested_movies'] = suggested_movies
-
-        # Display description in expander
-        with st.expander("Description"):
-            st.info(movie_info[-1])  # Display the last line which is the description
+    # Display description in expander
+    with st.expander("Description"):
+        st.info(movie_info[-1])  # Display the last line which is the description
 
 # Display previously suggested movies in the sidebar
 st.sidebar.markdown("## Previously Suggested Movies")
-
 # Display memory of each previously suggested movie in a separate section
 for movie_index, suggested_movie in enumerate(suggested_movies, start=1):
     movie_info = suggested_movie.split('\n')
     st.sidebar.markdown(f"### Movie {movie_index}")
-    with st.sidebar.expander(f"Memory {movie_index}"):
-        for memory_line in movie_info:
-            st.info(memory_line)
+    
+    # Check if movie_info has enough elements
+    if len(movie_info) > 1:
+        # Find the line containing the title
+        title_line = next((line for line in movie_info if "Title:" in line), None)
+        if title_line:
+            title = title_line.split(": ")[1].strip()
+            with st.sidebar.expander(f"{title}"):
+                for memory_line in movie_info:
+                    st.info(memory_line)
+        else:
+            st.sidebar.error("Title information not found.")
+    else:
+        st.sidebar.error("Unable to display movie information. Please try again.")
