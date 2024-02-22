@@ -8,6 +8,7 @@ import json
 import os
 from datetime import datetime, timedelta
 st.set_page_config(page_title="EntertainerGPT", page_icon="🎬🍿", layout="wide")
+
 # Load environment variables from .env file
 load_dotenv()
 config = dotenv_values(".env")
@@ -82,7 +83,7 @@ prompt2 = PromptTemplate(
     template=template2,
 )
 
-# Function to load Language Model
+# load Language Model
 def load_LLM():
     llm = OpenAI(temperature=1)
     return llm
@@ -90,14 +91,12 @@ def load_LLM():
 # Load Language Model
 llm = load_LLM()
 conversation = ConversationChain(llm=llm, verbose=True)
-# Streamlit page configuration
 
+# Streamlit page configuration
 st.header("Welcome to EntertainerGPT!")
 
-# Sidebar title
 st.sidebar.title("Recommended movies 🎬")
 
-# Display image and description
 col1, col2 = st.columns([2, 1])  
 with col1:
     st.image('face-with-cinema-elements.jpg', 
@@ -111,7 +110,7 @@ with col2:
         """
         <div style='padding: 20px; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);'>
             <h3 style='color: #333;'>Feeling indecisive about what to watch?</h3>
-            <p style='color: #555;'>Type your thoughts here, and let me help you discover something exciting!</p>
+            <p style='color: #555;'>Type your thoughts here, and let me help you discover something exciting!✨</p>
             <p style='color: #555;'>This tool is powered by <a href="https://www.langchain.com" style='color: #0072c6; text-decoration: none;'>LangChain</a> and <a href="https://openai.com/" style='color: #0072c6; text-decoration: none;'>OpenAI</a> and <b>made by</b> <a href="https://github.com/Dalia222" style='color: #0072c6; text-decoration: none;'>@DaliaRaafat</a>.</p>
         </div>
         """,
@@ -120,12 +119,8 @@ with col2:
     
 st.markdown("## What kind of movie are you in the mood for?")
 
-# Use columns for layout
 col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
 
-
-
-# Styling for genre selectbox
 with col1:
     st.markdown(
         """
@@ -141,7 +136,6 @@ with col1:
         ('Comedy', 'Horror', 'Romance', 'Sci-fi', 'Thriller', 'Drama', 'Action')
     )
 
-# Styling for release year slider
 with col2:
     st.markdown(
         """
@@ -155,7 +149,6 @@ with col2:
     min_year, max_year = 1920, 2024
     release_year_range = st.slider("", min_value=min_year, max_value=max_year, value=(min_year, max_year))
 
-# Styling for rating selectbox
 with col3:
     st.markdown(
         """
@@ -171,7 +164,6 @@ with col3:
         ('Top Rated ⭐⭐⭐⭐⭐', 'Highly Rated ⭐⭐⭐⭐', 'Average Rating ⭐⭐⭐')
     )
 
-# Styling for language selectbox
 with col4:
     st.markdown(
         """
@@ -187,11 +179,6 @@ with col4:
         ('English', 'Arabic', 'French')
     )
 
-
-
-
-
-
 col1, col2, col3 = st.columns([2, 1, 2])
 
 with col1:
@@ -205,10 +192,6 @@ with col2:
 
 with col3:
     random_button = st.button("Random Movie! 🎲", key="random_button")
-
-
-
-
 
 
 # Define prompts
@@ -244,15 +227,6 @@ if suggested_movie:
     # Display description in expander
     with st.expander("**Description**"):
         st.info(movie_info[-1])  # Display the last line which is the description
-
-
-
-
-
-
-
-
-
 
 # Display previously suggested movies in the sidebar
 st.sidebar.markdown("Here you will find Previously Suggested Movies")
